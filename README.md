@@ -50,71 +50,41 @@ Enable context printing:
 python PwnAnalyzer.py -t path/to/template.json -c
 ```
 
-### Example template File
-
-Here is an example of a template file (`template.json`):
+### Template schema
 
 ```json
 {
   "templates": [
     {
-      "name": "CVE-2023-33246 Detection",
-      "description": "Detects exploitation attempts of CVE-2023-33246 in broker.log.",
-      "tags": ["CVE-2023-33246", "broker", "exploitation"],
+      "name": "string",
+      "description": "string",
+      "tags": [
+        "string"
+      ],
       "search_tasks": [
         {
-          "file_path": "broker.log",
+          "file_path": "string",
           "patterns": [
             {
-              "pattern": "Broker receive request to update config, caller address=.*",
-              "case_sensitive": false,
-              "severity": "high",
-              "context_lines": 2,
+              "pattern": "string",
+              "case_sensitive": "boolean",
+              "severity": "string",
+              "context_lines": "integer",
               "actions": [
                 {
-                  "type": "alert",
-                  "message": "Suspicious configuration update detected."
+                  "type": "string",
+                  "message": "string"
                 }
               ]
-            },
-            {
-              "pattern": "updateBrokerConfig, new config: .*rocketmqHome=.*",
-              "case_sensitive": false,
-              "severity": "medium",
-              "context_lines": 3,
-              "actions": [
-                {
-                  "type": "alert",
-                  "message": "Potential exploitation of CVE-2023-33246 detected."
-                }
-              ]
-            },
-            {
-              "pattern": "rocketmqHome=.*(\\$@\\|sh|curl|wget).*",
-              "case_sensitive": false,
-              "severity": "critical",
-              "context_lines": 5,
-              "actions": [
-                {
-                  "type": "alert",
-                  "message": "Command injection attempt detected."
-                }
-              ]
-            },
-            {
-              "pattern": "Replace, key: listenPort, value: .* -> .*",
-              "case_sensitive": false,
-              "severity": "low",
-              "context_lines": 1,
-              "actions": []
             }
           ]
         }
       ],
-      "log_file": "dfir_search.log"
+      "log_file": "string"
     }
   ]
 }
+
 ```
 
 ## How It Works
