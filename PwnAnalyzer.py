@@ -42,42 +42,48 @@ def execute_actions(actions):
 def search_in_file(file_path, patterns, template_name, context_enabled):
     try:
         with open(file_path, 'r') as file:
-            content = file.read()
-            lines = content.splitlines()
-            for pattern_info in patterns:
-                pattern = pattern_info['pattern']
-                case_sensitive = pattern_info.get('case_sensitive', False)
-                context_lines = pattern_info.get('context_lines', 0)
+            lines = file.readlines()
 
-                if not case_sensitive:
-                    pattern = re.compile(pattern, re.IGNORECASE | re.MULTILINE)
-                else:
-                    pattern = re.compile(pattern, re.MULTILINE)
+        for pattern_info in patterns:
+            regex = pattern_info['pattern']
+            case_sensitive = pattern_info.get('case_sensitive', False)
+            context_lines = pattern_info.get('context_lines', 0)
 
-                matches = pattern.findall(content)
-                if matches:
-                    execute_actions(pattern_info.get('actions', []))
-                    log_message = (
-                        f"{Fore.GREEN}[+] Template: {template_name}\n"
-                        f"{Fore.GREEN}[+] File: {file_path}\n"
-                        f"{Fore.GREEN}[+] Pattern: '{pattern_info['pattern']}'\n"
-                        f"{Fore.GREEN}[+] Matches: {matches}\n"
-                        f"{Fore.GREEN}[+] Severity: {pattern_info.get('severity', 'unknown')}\n"
-                    )
-                    logging.info(log_message)
-                    print(log_message)
+            flags = re.MULTILINE
+            if not case_sensitive:
+                flags |= re.IGNORECASE
 
-                    if context_enabled and context_lines > 0:
-                        for match in matches:
-                            for i, line in enumerate(lines):
-                                if match in line:
-                                    start = max(i - context_lines, 0)
-                                    end = min(i + context_lines + 1, len(lines))
-                                    context = "\n".join(lines[start:end])
-                                    print(
-                                        f"{Fore.BLUE}Context:\n{context}\n{Fore.BLUE}---------------------------------------")
-                else:
-                    print(f"{Fore.RED}[-] No matches found in {file_path} for pattern '{pattern_info['pattern']}'")
+            pattern = re.compile(regex, flags)
+
+            matches = []
+            match_indices = []
+            for idx, line in enumerate(lines):
+                m = pattern.search(line)
+                if m:
+                    matches.append(m.group(0))
+                    match_indices.append(idx)
+
+            if matches:
+                execute_actions(pattern_info.get('actions', []))
+                log_message = (
+                    f"{Fore.GREEN}[+] Template: {template_name}\n"
+                    f"{Fore.GREEN}[+] File: {file_path}\n"
+                    f"{Fore.GREEN}[+] Pattern: '{pattern_info['pattern']}'\n"
+                    f"{Fore.GREEN}[+] Matches: {matches}\n"
+                    f"{Fore.GREEN}[+] Severity: {pattern_info.get('severity', 'unknown')}\n"
+                )
+                logging.info(log_message)
+                print(log_message)
+
+                if context_enabled and context_lines > 0:
+                    for idx in match_indices:
+                        start = max(idx - context_lines, 0)
+                        end = min(idx + context_lines + 1, len(lines))
+                        context = "".join(lines[start:end])
+                        print(
+                            f"{Fore.BLUE}Context:\n{context}\n{Fore.BLUE}---------------------------------------")
+            else:
+                print(f"{Fore.RED}[-] No matches found in {file_path} for pattern '{pattern_info['pattern']}'")
 
     except FileNotFoundError:
         error_message = f"{Fore.RED}[-] File not found: {file_path}"
