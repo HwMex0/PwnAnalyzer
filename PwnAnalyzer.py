@@ -4,6 +4,7 @@ import hashlib
 import logging
 import argparse
 import os
+import glob
 from colorama import init, Fore, Style
 from concurrent.futures import ThreadPoolExecutor
 
@@ -102,18 +103,23 @@ def run_search(template_path, template_name, context_enabled):
             futures = []
             for template in config['templates']:
                 for task in template['search_tasks']:
-                    file_path = task['file_path']
+                    file_pattern = task['file_path']
                     patterns = task['patterns']
 
-                    file_hash_before = compute_file_hash(file_path)
-                    logging.info(f"File hash before search: {file_hash_before}")
-                    print(f"{Fore.CYAN}[+] File hash before search: {file_hash_before}")
+                    matched_files = glob.glob(file_pattern, recursive=True)
+                    if not matched_files:
+                        matched_files = [file_pattern]
 
-                    futures.append(executor.submit(search_in_file, file_path, patterns, template_name, context_enabled))
+                    for file_path in matched_files:
+                        file_hash_before = compute_file_hash(file_path)
+                        logging.info(f"File hash before search: {file_hash_before}")
+                        print(f"{Fore.CYAN}[+] File hash before search: {file_hash_before}")
 
-                    file_hash_after = compute_file_hash(file_path)
-                    logging.info(f"File hash after search: {file_hash_after}")
-                    print(f"{Fore.CYAN}[+] File hash after search: {file_hash_after}")
+                        futures.append(executor.submit(search_in_file, file_path, patterns, template_name, context_enabled))
+
+                        file_hash_after = compute_file_hash(file_path)
+                        logging.info(f"File hash after search: {file_hash_after}")
+                        print(f"{Fore.CYAN}[+] File hash after search: {file_hash_after}")
 
             for future in futures:
                 future.result()
