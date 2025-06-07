@@ -29,6 +29,7 @@ To run PwnAnalyzer, you need to provide a path to a JSON template file or a dire
 
 - `-t`, `--template`: Path to the JSON template file or directory containing JSON files (required).
 - `-c`, `--context`: Enable context printing around matched patterns (optional).
+- `-o`, `--output`: Write scan results to the specified JSON file (optional).
 
 ### Example Commands
 
@@ -48,6 +49,12 @@ Enable context printing:
 
 ```bash
 python PwnAnalyzer.py -t path/to/template.json -c
+```
+
+Save results to a JSON file:
+
+```bash
+python PwnAnalyzer.py -t path/to/template.json -o results.json
 ```
 
 ### Template schema

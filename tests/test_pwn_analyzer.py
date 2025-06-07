@@ -61,3 +61,33 @@ def test_search_in_file_with_wildcard(tmp_path, capsys):
 
     assert str(file1) in captured
     assert str(file2) in captured
+
+
+def test_run_search_returns_results(tmp_path):
+    log_file = tmp_path / "attack.log"
+    log_file.write_text("something exploit happened\n")
+
+    template = {
+        "templates": [
+            {
+                "name": "ReturnTest",
+                "search_tasks": [
+                    {
+                        "file_path": str(log_file),
+                        "patterns": [
+                            {"pattern": "exploit", "case_sensitive": False, "severity": "high", "context_lines": 0, "actions": []}
+                        ]
+                    }
+                ],
+                "log_file": "test.log",
+            }
+        ]
+    }
+
+    template_file = tmp_path / "template.json"
+    template_file.write_text(json.dumps(template))
+
+    results = PwnAnalyzer.run_search(str(template_file), template_file.name, False)
+
+    assert len(results) == 1
+    assert results[0]["file"] == str(log_file)
