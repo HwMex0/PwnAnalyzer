@@ -115,8 +115,19 @@ python PwnAnalyzer.py -t path/to/template.json -o results.json
 
 The project uses `pytest` for its unit tests. Execute the suite with:
 
+
 ```bash
 pytest
+```
+
+## Example Logs
+
+Example log files are available in the `example_logs` directory. These files
+contain lines that match the bundled CVE templates and can be used to quickly
+test detection:
+
+```bash
+python PwnAnalyzer.py -t templates -c
 ```
 
 ## Contributions
