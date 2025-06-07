@@ -40,7 +40,7 @@ def execute_actions(actions):
         if action['type'] == 'alert':
             print(f"{Fore.YELLOW}[!] Alert: {action['message']}")
 
-def search_in_file(file_path, patterns, template_name, context_enabled):
+def search_in_file(file_path, patterns, template_name, context_enabled, results=None):
     try:
         with open(file_path, 'r') as file:
             lines = file.readlines()
@@ -76,6 +76,15 @@ def search_in_file(file_path, patterns, template_name, context_enabled):
                 logging.info(log_message)
                 print(log_message)
 
+                if results is not None:
+                    results.append({
+                        "template": template_name,
+                        "file": file_path,
+                        "pattern": pattern_info['pattern'],
+                        "matches": matches,
+                        "severity": pattern_info.get('severity', 'unknown'),
+                    })
+
                 if context_enabled and context_lines > 0:
                     for idx in match_indices:
                         start = max(idx - context_lines, 0)
@@ -95,7 +104,7 @@ def search_in_file(file_path, patterns, template_name, context_enabled):
         logging.error(error_message)
         print(error_message)
 
-def run_search(template_path, template_name, context_enabled):
+def run_search(template_path, template_name, context_enabled, results=None):
     try:
         config = load_search_tasks(template_path)
         log_file = config.get('log_file', 'dfir_search.log')
@@ -104,6 +113,9 @@ def run_search(template_path, template_name, context_enabled):
         print(Fore.CYAN + ASCII_LOGO)
         logging.info('DFIR search started')
         print(Fore.CYAN + '[+] DFIR search started')
+
+        if results is None:
+            results = []
 
         with ThreadPoolExecutor() as executor:
             futures = []
@@ -121,7 +133,7 @@ def run_search(template_path, template_name, context_enabled):
                         logging.info(f"File hash before search: {file_hash_before}")
                         print(f"{Fore.CYAN}[+] File hash before search: {file_hash_before}")
 
-                        futures.append(executor.submit(search_in_file, file_path, patterns, template_name, context_enabled))
+                        futures.append(executor.submit(search_in_file, file_path, patterns, template_name, context_enabled, results))
 
                         file_hash_after = compute_file_hash(file_path)
                         logging.info(f"File hash after search: {file_hash_after}")
@@ -132,6 +144,7 @@ def run_search(template_path, template_name, context_enabled):
 
         logging.info('DFIR search completed')
         print(Fore.CYAN + '[+] DFIR search completed')
+        return results
     except KeyError as e:
         print(f"{Fore.RED}[-] Configuration error: {e}")
     except Exception as e:
@@ -142,17 +155,25 @@ def main():
     parser.add_argument('-t', '--template', required=True,
                         help='Path to the JSON configuration file or directory containing JSON files')
     parser.add_argument('-c', '--context', action='store_true', help='Enable context printing')
+    parser.add_argument('-o', '--output', help='Path to JSON file for saving results')
     args = parser.parse_args()
 
     template_path = args.template
     context_enabled = args.context
+    output_file = args.output
+
+    all_results = []
 
     if os.path.isdir(template_path):
         for filename in os.listdir(template_path):
             if filename.endswith('.json'):
-                run_search(os.path.join(template_path, filename), filename, context_enabled)
+                all_results.extend(run_search(os.path.join(template_path, filename), filename, context_enabled))
     else:
-        run_search(template_path, os.path.basename(template_path), context_enabled)
+        all_results.extend(run_search(template_path, os.path.basename(template_path), context_enabled))
+
+    if output_file:
+        with open(output_file, 'w') as f:
+            json.dump(all_results, f, indent=2)
 
 if __name__ == "__main__":
     main()
