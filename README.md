@@ -104,6 +104,14 @@ python PwnAnalyzer.py -t path/to/template.json -c
 5. **Logging:**
    - Detailed information about the search and detected patterns is logged to a specified log file.
 
+## Running Tests
+
+The project uses `pytest` for its unit tests. Execute the suite with:
+
+```bash
+pytest
+```
+
 ## Contributions
 
 Contributions are welcome! Feel free to submit a pull request or open an issue to discuss potential improvements or report bugs.
